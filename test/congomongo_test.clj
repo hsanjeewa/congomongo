@@ -4,9 +4,8 @@
         somnium.congomongo.config
         somnium.congomongo.util
         somnium.congomongo.coerce
-        clojure.contrib.pprint)
+        clojure.pprint)
   (:use [clojure.contrib.json :only (read-json json-str)])
-  (:use [clojure.contrib.duck-streams :only (slurp*)])
   (:import [com.mongodb BasicDBObject]))
 
 (deftest coercions
@@ -273,7 +272,7 @@
   (with-test-mongo
     (let [f (insert-file! :testfs (.getBytes "plantain"))
           stream (stream-from :testfs f)
-          data (slurp* stream)]
+          data (slurp stream)]
       (is (= "plantain" data)))))
 
 (deftest test-roundtrip-vector

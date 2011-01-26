@@ -80,15 +80,15 @@ When with-mongo and set-connection! interact, last one wins"
    :host -> defaults to localhost
    :port -> defaults to 27017
    :db   -> defaults to nil (you'll have to set it anyway, might as well do it now.)"
-  {:arglists '({:db ? :host "localhost" :port 27017})}
+  {:arglists '([:db ? :host "localhost" :port 27017])}
   [:db nil :host "localhost" :port 27017]
   (set-connection! (make-connection db :host host :port port))
   true)
 
 (def write-concern-map
-     {:none com.mongodb.DB$WriteConcern/NONE
-      :normal com.mongodb.DB$WriteConcern/NORMAL
-      :strict com.mongodb.DB$WriteConcern/STRICT})
+     {:none com.mongodb.WriteConcern/NONE
+      :normal com.mongodb.WriteConcern/NORMAL
+      :strict com.mongodb.WriteConcern/SAFE})
 
 (defn set-write-concern
   "Sets the write concern on the connection. Setting is one of :none, :normal, :strict"
@@ -211,7 +211,7 @@ When with-mongo and set-connection! interact, last one wins"
    "Alters/inserts a map in a collection. Overwrites existing objects.
    The shortcut forms need a map with valid :_id and :_ns fields or
    a collection and a map with a valid :_id field."
-   {:arglists '(collection old new {:upsert true :multiple false :as :clojure :from :clojure})}
+   {:arglists '([collection old new :upsert true :multiple false :as :clojure :from :clojure])}
    [coll old new :upsert true :multiple false :as :clojure :from :clojure]
    (coerce (.update #^DBCollection  (get-coll coll)
                     #^DBObject (coerce old [from :mongo])
@@ -221,7 +221,7 @@ When with-mongo and set-connection! interact, last one wins"
 (defunk destroy!
    "Removes map from collection. Takes a collection name and
     a query map"
-   {:arglists '(collection where {:from :clojure})}
+   {:arglists '([collection where :from :clojure ])}
    [c q :from :clojure]
    (.remove (get-coll c)
             #^DBObject (coerce q [from :mongo])))
@@ -244,7 +244,7 @@ When with-mongo and set-connection! interact, last one wins"
     Options include:
     :unique -> defaults to false
     :force  -> defaults to true"
-   {:arglists '(collection fields {:unique false :force true})}
+   {:arglists '([collection fields :unique false :force true])}
    [c f :unique false :force true]
    (-> (get-coll c)
        (.ensureIndex (coerce-index-fields f) (coerce {:force force :unique unique} [:clojure :mongo]))))
@@ -310,7 +310,7 @@ When with-mongo and set-connection! interact, last one wins"
    :filename    -> defaults to nil
    :contentType -> defaults to nil
    :metadata    -> defaults to nil"
-  {:arglists '(fs data {:filename nil :contentType nil :metadata nil})}
+  {:arglists '([fs data :filename nil :contentType nil :metadata nil])}
   [fs data :filename nil :contentType nil :metadata nil]
   (let [f (.createFile (get-gridfs fs) data)]
     (if filename (.setFilename f filename))
@@ -322,7 +322,7 @@ When with-mongo and set-connection! interact, last one wins"
 (defunk destroy-file!
    "Removes file from gridfs. Takes a GridFS name and
     a query map"
-   {:arglists '(fs where {:from :clojure})}
+   {:arglists '([fs where :from :clojure])}
    [fs q :from :clojure]
    (.remove (get-gridfs fs)
             #^DBObject (coerce q [from :mongo])))
@@ -368,7 +368,7 @@ When with-mongo and set-connection! interact, last one wins"
   (let [db #^com.mongodb.DB (:db somnium.congomongo.config/*mongo-config*)
         m (.doEval db js (into-array Object args))]
     (let [result (coerce m [:mongo :clojure])]
-      (if (= 1 (:ok result))
+      (if (= 1.0 (:ok result))
         (:retval result)
         (throw (Exception. (format "failure executing javascript: %s" (str result))))))))
 
@@ -428,5 +428,6 @@ When with-mongo and set-connection! interact, last one wins"
       (-> (.getOutputCollection result)
             .getName
             keyword))))
+
 
 
